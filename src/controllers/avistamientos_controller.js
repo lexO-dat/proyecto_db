@@ -22,7 +22,6 @@ const pool = new Pool(config);
   "evidencia": "foto evidencia.jpg"
 }
 */
-
 const crearAvistamiento = async (req, res) => {
     try {
         const data = {
@@ -54,7 +53,7 @@ const crearAvistamiento = async (req, res) => {
             const usuario = [user];
             
             const userResult = await pool.query(queryUser, usuario);
-            const userId = userResult.rows[0].id;
+            const userId = userResult.rows[0].id;  
 
             if(avistamientoExiste){
                 res.send({message:'El titulo de la historia ya existe'});
@@ -73,6 +72,11 @@ const crearAvistamiento = async (req, res) => {
     }
 };
 
+/*
+ {
+    "id": 6
+ }
+*/
 const eliminarAvistamiento = async (req, res) => {
     try {
         //se debe entregar el id del avistamiento por el body
@@ -112,6 +116,12 @@ const eliminarAvistamiento = async (req, res) => {
     }
 };
 
+/*
+{
+  "id": 6,
+  "titulo": "titulo xd"
+}
+*/
 
 const cambiarTitulo = async (req, res) => {
     try {
@@ -120,30 +130,29 @@ const cambiarTitulo = async (req, res) => {
             //titulo nuevo a ingresar
             titulo_historia: req.body.titulo
         };
-        const userCookie = req.cookies.usuario;
+        const authheader = req.headers.authorization;
 
-        if (!userCookie) {
-            return res.status(403).send({message:'Debes tener una sesion abierta para cambiar el titulo de un avistamiento'});
+        if (!authheader) {
+            return res.status(403).send({message: 'No tienes sesion iniciada, inicia sesion para crear un avistamiento'});
+            res.setHeader('WWW-Authenticate', 'Basic');
         }else{
-            // busca el id del usuario que publico el avistamiento
-            const queryA = 'SELECT usuarios.user_name FROM avistamientos JOIN usuarios ON avistamientos.id_usuario = usuarios.id WHERE avistamientos.id = $1';
-            const avistamientoResult = await pool.query(queryA, [avistamientoId]);
+            const auth = new Buffer.from(authheader.split(' ')[1], 'base64').toString().split(':');
+            const user = auth[0];
+            // busca el USER_NAME del usuario que publico el avistamiento
+            const queryA = 'SELECT usuarios.user_name FROM avistamiento JOIN usuarios ON avistamiento.id_usuario = usuarios.id WHERE avistamiento.id = $1';
+            const avistamientoResult = await pool.query(queryA, [data.id]);
 
-            // Si no se encuentra el avistamiento, enviar mensaje de error
-            if (avistamientoResult.rows.length === 0) {
-                return res.send({message:'Avistamiento no encontrado'});
-            }
 
             // Si el usuario que quiere editar el titulo del avistamiento no es el mismo que lo publicó, enviar mensaje de error
-            const userIdFromAvistamiento = avistamientoResult.rows[0].usuario_id;
-            if (userCookie !== userIdFromAvistamiento) {
+            const userNameFromAvistamiento = avistamientoResult.rows[0].user_name;
+            if (user !== userNameFromAvistamiento) {
                 return res.status(403).send({message:'No tienes permiso para cambiar el titulo de este avistamiento, ya que, no lo publicaste'});
+            }else{
+                const query = 'UPDATE avistamiento SET titulo_historia = $1 WHERE id = $2';
+                const values = [data.titulo_historia, data.id];
+                const response = await pool.query(query, values);
+                res.send({message: 'Titulo cambiado'});
             }
-
-            const query = 'UPDATE avistamientos SET titulo_historia = $1 WHERE id = $2';
-            const values = [data.titulo_historia, data.id];
-            const response = await pool.query(query, values);
-            res.send({message: 'Titulo cambiado'});
         }
     }
     catch (error) {
@@ -152,6 +161,13 @@ const cambiarTitulo = async (req, res) => {
     }
 };
 
+/*
+{
+  "id": 6,
+  "evidencia": "foto 400% real no fake"
+}
+*/
+
 const cambiarEvidencia = async (req, res) => {
     try {
         const data = {
@@ -159,31 +175,29 @@ const cambiarEvidencia = async (req, res) => {
             //evidencia nueva a ingresar
             evidencia: req.body.evidencia
         };
+        const authheader = req.headers.authorization;
 
-        const userCookie = req.cookies.usuario;
-
-        if (!userCookie) {
-            return res.status(403).send({message:'Debes tener una sesion abierta para cambiar la evidencia de un avistamiento'});
+        if (!authheader) {
+            return res.status(403).send({message: 'No tienes sesion iniciada, inicia sesion para crear un avistamiento'});
+            res.setHeader('WWW-Authenticate', 'Basic');
         }else{
-            // busca el id del usuario que publico el avistamiento
-            const queryA = 'SELECT usuarios.user_name FROM avistamientos JOIN usuarios ON avistamientos.id_usuario = usuarios.id WHERE avistamientos.id = $1';
-            const avistamientoResult = await pool.query(queryA, [avistamientoId]);
+            const auth = new Buffer.from(authheader.split(' ')[1], 'base64').toString().split(':');
+            const user = auth[0];
 
-            // Si no se encuentra el avistamiento, enviar mensaje de error
-            if (avistamientoResult.rows.length === 0) {
-                return res.send({message:'Avistamiento no encontrado'});
-            }
+            // busca el USER_NAME del usuario que publico el avistamiento
+            const queryA = 'SELECT usuarios.user_name FROM avistamiento JOIN usuarios ON avistamiento.id_usuario = usuarios.id WHERE avistamiento.id = $1';
+            const avistamientoResult = await pool.query(queryA, [data.id]);
 
             // Si el usuario que quiere editar el titulo del avistamiento no es el mismo que lo publicó, enviar mensaje de error
-            const userIdFromAvistamiento = avistamientoResult.rows[0].usuario_id;
-            if (userCookie !== userIdFromAvistamiento) {
+            const userIdFromAvistamiento = avistamientoResult.rows[0].user_name;
+            if (user !== userIdFromAvistamiento) {
                 return res.status(403).send({message:'No tienes permiso para cambiar la evidencia de este avistamiento, ya que, no lo publicaste'});
+            }else{
+                const query = 'UPDATE avistamiento SET evidencia = $1 WHERE id = $2';
+                const values = [data.evidencia, data.id];
+                const response = await pool.query(query, values);
+                res.send({message: 'Evidencia cambiada'});
             }
-
-            const query = 'UPDATE avistamientos SET evidencia = $1 WHERE id = $2';
-            const values = [data.evidencia, data.id];
-            const response = await pool.query(query, values);
-            res.send({message: 'Evidencia cambiada'});
         }
     }
     catch (error) {
@@ -194,7 +208,7 @@ const cambiarEvidencia = async (req, res) => {
 
 const ultimos10avistamientos = async (req, res) => {
     try {
-        const query = 'SELECT * FROM avistamientos ORDER BY fecha DESC LIMIT 10';
+        const query = 'SELECT * FROM avistamiento ORDER BY fecha DESC LIMIT 10';
         const response = await pool.query(query);
         res.send(response.rows);
     }
@@ -206,7 +220,7 @@ const ultimos10avistamientos = async (req, res) => {
 
 const avistamientoconmascomentarios = async (req, res) => {
     try {
-        const query = 'select avistamiento.titulo_historia from avistamiento join (select count(comentarios), id from avistamientos group by id) as t1 on t1.id = avistamiento.id join (select max(t2.count) from (select count(comentarios), id from avistamientos group by id) as t2) as t3 on t3.max = t1.count group by avistamiento.titulo_historia';
+        const query = 'select avistamiento.titulo_historia from avistamiento join (select count(comentarios.id) as count, avistamiento.id from avistamiento join comentarios on avistamiento.id = comentarios.avistamiento_id group by avistamiento.id) as t1 on t1.id = avistamiento.id join (select max(t2.count) as max_count from (select count(comentarios.id) as count, avistamiento.id from avistamiento join comentarios on avistamiento.id = comentarios.avistamiento_id group by avistamiento.id) as t2) as t3 on t3.max_count = t1.count group by avistamiento.titulo_historia';
         const response = await pool.query(query);
         res.send(response.rows);
     }
@@ -224,3 +238,4 @@ module.exports = {
     ultimos10avistamientos,
     avistamientoconmascomentarios
 };
+

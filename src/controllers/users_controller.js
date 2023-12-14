@@ -147,7 +147,7 @@ const iniciarSesion = async (req, res) => {
     }
 };
 */
-
+/*
 const cerrarSesion = async (req, res) => {
     //console.log(req);
     const authheader = req.headers.authorization;
@@ -159,7 +159,13 @@ const cerrarSesion = async (req, res) => {
         res.setHeader('WWW-Authenticate', 'Basic');
     }
 };
+*/
 
+/*
+    {
+    "nuevo_user_name": "12341234"
+    }
+*/
 const cambiarNombreUsuario = async (req, res) => {
     try {
         const data = {
@@ -206,6 +212,12 @@ const cambiarNombreUsuario = async (req, res) => {
     }
 };
 
+/*
+    {
+        "nuevo_correo": "holahola@gmail.com"
+    }
+*/
+
 const cambiarCorreo = async (req, res) => {
     try {
         const data = {
@@ -234,6 +246,11 @@ const cambiarCorreo = async (req, res) => {
     }
 };
 
+/*
+    {
+        "nuevo_telefono": "12341234"
+    }
+*/
 const cambiarTelefono = async (req, res) => {
     try {
         const data = {
@@ -309,7 +326,7 @@ const cambiarContrasena = async (req, res) => {
 module.exports = {
     crearUsuario,
     //iniciarSesion,
-    cerrarSesion,
+    //cerrarSesion,
     subirAlien,
     cambiarNombreUsuario,
     cambiarCorreo,

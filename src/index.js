@@ -9,7 +9,6 @@ const port = 3000;
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
-app.use(cookieParser());
 
 //rutas
 app.use(require('./routes/index'));

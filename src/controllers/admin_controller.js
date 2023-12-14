@@ -263,7 +263,12 @@ const editarAnatomia = async (req, res) => {
     }
 };
 
-
+/*
+{
+  "id": 6,
+  "clasificacion": "aceptado"
+}
+*/
 const cambiarClasificacion = async (req, res) => {
     try {
         const data = {
